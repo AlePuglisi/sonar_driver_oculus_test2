@@ -82,7 +82,7 @@ enum OculusPartNumberType : uint16_t
   partNumberM750d_Artemis = 1135,
   partNumberM370          = 1041,
   partNumberM1200d        = 1042,
-  partNumberM3000d        = 2203,
+  partNumberM3000d        = 2203, 
 };
 
 // -----------------------------------------------------------------------------

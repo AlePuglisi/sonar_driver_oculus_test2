@@ -1,26 +1,23 @@
 <?xml version="1.0"?>
-
-<package format="3">
+<package format="2">
   <name>sonar_oculus</name>
   <version>1.0.0</version>
   <description>The sonar_oculus package</description>
+  <maintainer email="vsieben@slb.com">Vincent Sieben</maintainer>
+  <maintainer email="pvt@mit.edu">Pedro Vaz Teixeira</maintainer>
+  <maintainer email="jwang92@stevens.edu">Jinkun Wang</maintainer>
   <license>Schlumberger retains all rights and privledges</license>
-  <maintainer email="bastian.schildknecht@gmail.com">Bastian Schildknecht</maintainer>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
   
-  <depend>rclcpp</depend>
-  <depend>std_msgs</depend>
-  <depend>cv_bridge</depend>
+  <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>OpenCV</depend>
-  <depend>sonar_oculus_interface</depend>
+  <depend>dynamic_reconfigure</depend>
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>cv_bridge</depend>
+  <depend>python-scipy</depend>
+  <depend>nav_core</depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
-  
-  <export>
-    <build_type>ament_cmake</build_type>
-  </export>
-
+  <export> </export>
 </package>

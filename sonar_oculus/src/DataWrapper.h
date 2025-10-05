@@ -16,18 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************/
-#pragma once
 
-#include <stdint.h>
+#pragma once                    // Avoid multiple include in the header 
 
 // ----------------------------------------------------------------------------
 // User data configuration structure
-#pragma pack(push, 1)
+
+// this structure is probably used for sending or receiving network configuration 
+// data between the sonar and the host computer (ROS driver).
+#pragma pack(push, 1)           // Managment of padding bytes in the struct 
 struct UserConfig
 {
-    uint32_t m_ipAddr;
-    uint32_t m_ipMask;
-    uint32_t m_bDhcpEnable;
+    uint32_t m_ipAddr;          // Sonar IP Adress
+    uint32_t m_ipMask;          // Sonar SubNet Mask
+    uint32_t m_bDhcpEnable;     // DHCP enable flag (protocol to assign IP addresses)
 };
-#pragma pack(pop)
+#pragma pack(pop)               // Managment of padding bytes in the struct 
 

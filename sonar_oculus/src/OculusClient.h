@@ -19,9 +19,8 @@
 
 #include <mutex>
 #include <thread>
-#include <string>
-#include "Oculus.hpp"
-#include "DataWrapper.hpp"
+#include "Oculus.h"
+#include "DataWrapper.h"
 
 // ----------------------------------------------------------------------------
 // OsBufferEntry - contains a return message and an embedded image
