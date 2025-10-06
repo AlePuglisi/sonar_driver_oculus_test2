@@ -11,10 +11,10 @@ def generate_launch_description():
                                     description="Run with rqt or not"
     )
 
-    sonar_arg = DeclareLaunchArgument("sonar", 
-                                      default_value="true",
-                                      description="Enable sonar nodes"
-    )
+    # sonar_arg = DeclareLaunchArgument("sonar", 
+    #                                   default_value="true",
+    #                                   description="Enable sonar nodes"
+    # )
 
     model_arg = DeclareLaunchArgument("model", 
                                       default_value="M3000d",
@@ -25,9 +25,9 @@ def generate_launch_description():
     sonar_node = Node(
         package="sonar_oculus",
         executable="sonar_oculus",
-        name=[ "sonar_oculus", LaunchConfiguration("model") ],
+        name=[ "sonar_oculus_", LaunchConfiguration("model") ],
         output="screen",
-        condition=IfCondition(LaunchConfiguration("sonar")),
+    #   condition=IfCondition(LaunchConfiguration("sonar")),
         parameters=["config/sonar_oculus_params.yaml"], 
     )
 
@@ -35,14 +35,14 @@ def generate_launch_description():
     sonar_viewer_node = Node(
         package="sonar_oculus",
         executable="oculus_viewer.py",
-        name="viewer",
+        name=["sonar_oculus", LaunchConfiguration("model"), "_viewer"],
         output="screen",
         arguments=[LaunchConfiguration("model")],
     )
     
     return LaunchDescription([
         rqt_arg,
-        sonar_arg,
+    #   sonar_arg,
         model_arg,
         sonar_node,
         sonar_viewer_node,
