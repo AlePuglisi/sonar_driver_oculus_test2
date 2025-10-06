@@ -1,3 +1,9 @@
+# Map the struct OculusSimplePingResult in Oculus.h
+# represents the received sonar ping (a return message), 
+# and it wraps together both metadata and the image data from the sonar.
+
+# Same as OculusPing with Uncompressed Image
+
 std_msgs/Header header
 
 OculusFire fire_msg

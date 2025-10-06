@@ -1,13 +1,18 @@
 sonar_oculus:
   ros__parameters:
 
+    # Model name 
+    # [string]
     model: "M3000d"
 
-    frame_id: "sonar"
+    # Frame of reference used in ping msg header 
+    # [string]
+    frame_id: "sonar"   
 
     # Frequency mode: 
     #   1 = LowFrequency  (M750d: 750kHz, M1200d: 1.2Mhz, M3000d: 1.2Mhz)
-    #   2 = HighFrequency (M750d: 1.2Mhz, M1200d: 2.1Mhz, M3000d:   3Mhz)
+    #   2 = HighFrequency (M750d: 1.2Mhz, M1200d: 2.1Mhz, M3000d: 3.0Mhz)
+    # [int]
     Mode: 1
 
     # Ping rate:
@@ -16,22 +21,37 @@ sonar_oculus:
     #   2 = Highest (40Hz max)
     #   3 = Low (5Hz max)
     #   4 = Lowest (2Hz max)
+    # [int]
     PingRate: 3
 
     # Gain in percentage (0–100)
+    # [double]
     Gain: 20
 
-    # Range in meters (1–120)
+    # Range in meters (1–30)
+    # [double]
     Range: 10
 
     # Salinity in ppm (0–50)
+    # [double]
     Salinity: 0
 
     # Colormap for oculus_viewer:
-    #   0=Autumn, 1=Bone, 2=Cool, 3=Hot, 4=HSV,
-    #   5=Jet, 6=Ocean, 7=Pink, 8=Rainbow, 
-    #   9=Spring, 10=Summer, 11=Winter
+    # 0 = Autumn 
+    # 1 = Bone
+    # 2 = Cool 
+    # 3 = Hot
+    # 4 = HSV
+    # 5 = Jet
+    # 6 = Ocean
+    # 7 = Pink
+    # 8 = Rainbow 
+    # 9 = Spring
+    # 10 = Summer
+    # 11 = Winter
+    # [int]
     Colormap: 1
 
     # Raw image flag
+    # [bool]
     Raw: false

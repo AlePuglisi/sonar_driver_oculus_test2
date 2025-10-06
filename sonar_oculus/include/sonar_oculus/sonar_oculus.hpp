@@ -17,8 +17,8 @@
 #include <unistd.h>
 
 // sonar_oculus dependencies
-#include "Oculus.hpp"
-#include "OculusClient.hpp"
+#include "Oculus.h"
+#include "OculusClient.h"
 
 //opencv
 //#include <opencv2/cv.h>
@@ -45,39 +45,49 @@ class SonarOculusNode : public rclcpp::Node
 {
    public: 
       SonarOculusNode();
+      ~SonarOculusNode();
     
    private:
-      // Callbacks and Methods
+      // --- Callbacks and Methods ---
 
-      // Parameter reconfigure callback
       /**
        * @brief This callback function runs when parameter reconfiguration occurs
-       *
+       *        Tutorial on this at: https://roboticsbackend.com/ros2-rclcpp-parameter-callback/
        * @param &params
        */
       rcl_interfaces::msg::SetParametersResult reconfigureSonarCallback(
          const std::vector<rclcpp::Parameter> &params);
       /**
-       * @brief This function set up connection (UDP and TCP)
+       * @brief This function search Oculus Sonar ip (UDP if ip not found)
        * 
        */
-      void connectToSonar();      
+      void searchSonar(); 
+      /**
+       * @brief This function set up TCP connection
+       * 
+       */
+      void connectToSonar(); 
       /**
        * @brief This function publish ping message
        * 
        */
       void publishPing();      
+      /**
+       * @brief Simple error handling function
+       * 
+       * @param *msg 
+       */
+      // Error handling function
+      void error(const char *msg);
 
       // ROS Publishers
       rclcpp::Publisher<sonar_oculus_interface::msg::OculusPing>::SharedPtr ping_pub_;
 
-      // Parameter callback handle
+      // Parameter callback handle (for dynamic reconfiguration)
       OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 
-      // Utility 
-      OsClientCtrl sonar;
-      OculusPartNumberType partNumber;
-
+      // --- DRIVER VARIABLES --- //       
+      // ROS Timer for the Ping reader loop 
       rclcpp::TimerBase::SharedPtr sonar_timer_;
 
       // Messages 
@@ -85,7 +95,13 @@ class SonarOculusNode : public rclcpp::Node
       sonar_oculus_interface::msg::OculusFire fire_msg;
       sonar_oculus_interface::msg::OculusPing ping_msg;
 
-      // Sonar Configuration 
+      // Main interface with Sonar  
+      OsClientCtrl sonar;               // User facing API to interact with Sonar HW 
+      OculusPartNumberType partNumber;  // Data type to represent HW partNumber based on Oculus Model 
+
+      // Sonar Configuration (From ROS params)
+      std::string model;
+      std::string frame_id; 
       int mode;
       int ping_rate;
       double range;
@@ -93,11 +109,8 @@ class SonarOculusNode : public rclcpp::Node
       double soundspeed;
       double salinity;
 
-      std::string model;
+      //Communication variables 
       std::string ip;
-      std::string frame_id; 
-
-      //Communication
       struct sockaddr_in serverUDP;
       struct sockaddr_in clientUDP;
       struct sockaddr_in serverTCP;
