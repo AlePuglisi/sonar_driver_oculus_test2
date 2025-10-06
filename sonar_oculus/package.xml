@@ -3,10 +3,10 @@
 <package format="3">
   <name>sonar_oculus</name>
   <version>1.0.0</version>
-  <description>The sonar_oculus package</description>
-  <license>Schlumberger retains all rights and privledges</license>
-  <maintainer email="bastian.schildknecht@gmail.com">Bastian Schildknecht</maintainer>
-
+  <description> sonar_oculus package, containing Low Level driver code and ROS driver code to connect and communicate with the sonar</description>
+  <license>Apache-2.0</license>
+  <maintainer email="puglisialessandro27@gmail.com">Alessandro Puglisi</maintainer>
+  
   <buildtool_depend>ament_cmake</buildtool_depend>
   
   <depend>rclcpp</depend>
