@@ -203,6 +203,8 @@ int main(int argc, char **argv) {
         model = "M750d";
       else if (partNumber == OculusPartNumberType::partNumberM1200d)
         model = "M1200d";
+	  else if (partNumber == OculusPartNumberType::partNumberM3000d)
+        model = "M3000d";
       else
         ROS_ERROR_STREAM("Part number not recognized " << partNumber);
 
