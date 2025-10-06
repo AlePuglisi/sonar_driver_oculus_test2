@@ -36,9 +36,9 @@ class OculusViewer(Node):
         self.f_bearings = None
 
         # --- Subscriber and Publisher ---
-        topic = "/sonar_oculus_node/" + model + "/ping"
+        ping_sub_topic = "/sonar_oculus_node/" + model + "/ping"
         self.ping_sub = self.create_subscription(
-            OculusPing, topic, self.ping_callback, 10
+            OculusPing, ping_sub_topic, self.ping_callback, 10
         )
         self.img_pub = self.create_publisher(
             Image, "/sonar_oculus_node/" + model + "/image", 10
@@ -50,6 +50,7 @@ class OculusViewer(Node):
     # Precompute mapping from polar sonar grid to image grid
     # ---------------------------------------------------
     def generate_map_xy(self, ping):
+        # Extract sonar geometry parameters
         _res = ping.range_resolution
         _height = ping.num_ranges * _res
         _rows = ping.num_ranges
@@ -75,6 +76,7 @@ class OculusViewer(Node):
             _cols,
         )
 
+        # Prepare the bearing (beamindex mapping)
         bearings = to_rad(np.asarray(ping.bearings, dtype=np.float32))
         self.f_bearings = interp1d(
             bearings,
@@ -85,11 +87,14 @@ class OculusViewer(Node):
             assume_sorted=True,
         )
 
+        # Generate cartesian coordinate grid 
         XX, YY = np.meshgrid(range(self.cols), range(self.rows))
         x = self.res * (self.rows - YY)
         y = self.res * (-self.cols / 2.0 + XX + 0.5)
+        # Convert Cartesian coordinate to polar sonar coordinates 
         b = np.arctan2(y, x) * REVERSE_Z
         r = np.sqrt(np.square(x) + np.square(y))
+        # Convert from phisical units to image units 
         self.map_y = np.asarray(r / self.res, dtype=np.float32)
         self.map_x = np.asarray(self.f_bearings(b), dtype=np.float32)
 
@@ -103,21 +108,22 @@ class OculusViewer(Node):
         # Decode raw sonar ping into numpy array
         img = np.frombuffer(msg.ping.data, np.uint8)
         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-
+        # Show directly polar image (raw image)
         if raw:
+            # Normalize and Colorize for better visibility 
             img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
             img = cv2.applyColorMap(img, cm)
             img_msg = bridge.cv2_to_imgmsg(img, encoding="bgr8")
             img_msg.header = msg.header
             self.img_pub.publish(img_msg)
-
+        # Process the image to transform in cartesian coordinates 
         else:
             self.generate_map_xy(msg)
             img = np.array(img, dtype=img.dtype, order="F")
 
             if self.cols > img.shape[1]:
                 img.resize(self.rows, self.cols)
-
+            # Overlays for visualization
             if vis_lines:
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
                 cv2.line(img, (334, 0), (334, 1000), [0, 255, 0], 5)
@@ -136,6 +142,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     if len(args) < 2:
+        print("Please enter an argument for sonar model")
         print("Usage: ros2 run sonar_oculus oculus_viewer.py <M1200d|M750d>")
         return
 
