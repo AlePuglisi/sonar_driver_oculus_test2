@@ -13,14 +13,19 @@ def generate_launch_description():
                                     description="Run with rqt or not"
     )
 
-    # sonar_arg = DeclareLaunchArgument("sonar", 
-    #                                   default_value="true",
-    #                                   description="Enable sonar nodes"
-    # )
+    sonar_arg = DeclareLaunchArgument("sonar", 
+                                      default_value="true",
+                                      description="Enable sonar nodes"
+    )
 
     model_arg = DeclareLaunchArgument("model", 
                                       default_value="M3000d",
                                       description="sonar model (M750d / M1200d / M300d)"
+    )
+
+    log_level_arg = DeclareLaunchArgument("log", 
+                                      default_value="INFO",
+                                      description="Specify logs severity level"
     )
 
     params_config = os.path.join(
@@ -35,8 +40,9 @@ def generate_launch_description():
         executable="sonar_oculus",
         name=[ "sonar_oculus_", LaunchConfiguration("model") ],
         output="screen",
-    #   condition=IfCondition(LaunchConfiguration("sonar")),
+        condition=IfCondition(LaunchConfiguration("sonar")),
         parameters=[params_config], 
+        arguments=['--ros-args', '--log-level', LaunchConfiguration("log")],
     )
 
     # Node for sonar viewer
@@ -50,8 +56,9 @@ def generate_launch_description():
     
     return LaunchDescription([
         rqt_arg,
-    #   sonar_arg,
+        sonar_arg,
         model_arg,
+        log_level_arg,
         sonar_node,
         sonar_viewer_node,
     ])
