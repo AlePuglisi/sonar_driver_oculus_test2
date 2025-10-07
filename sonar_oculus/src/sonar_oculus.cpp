@@ -42,6 +42,8 @@ SonarOculusNode::~SonarOculusNode()
     sonar.Disconnect();
     // close TCP connection 
     close(sockTCP);
+    
+    RCLCPP_INFO(this->get_logger(), "Disconnecting from Sonar.");
 }
 
 void SonarOculusNode::error(const char *msg) {
