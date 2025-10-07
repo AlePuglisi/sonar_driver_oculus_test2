@@ -265,9 +265,10 @@ void OsReadThread::run()
   unsigned nSent = 0;
 
   // Cannot progress without a client
-  if (!m_pClient)
+  if (!m_pClient){
+    std::cout << "No client available, Cannot run()";
     return;
-
+  } 
 /* Do not want run to open sockets
 
   // Try and open the socket
@@ -296,6 +297,7 @@ void OsReadThread::run()
 
   if (IsActive())
   {
+    // std::cout << "Read Thread Active, start run()";
     // Send any waiting transmit data
     m_sending.lock();
     {

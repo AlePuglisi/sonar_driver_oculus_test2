@@ -1,6 +1,5 @@
 #include "sonar_oculus/sonar_oculus.hpp"
 
-#define DEBUG true
 
 SonarOculusNode::SonarOculusNode()
 : Node("sonar_oculus"),
@@ -53,9 +52,7 @@ void SonarOculusNode::error(const char *msg) {
 void SonarOculusNode::searchSonar()
 {
 
-#if DEBUG
     RCLCPP_INFO(this->get_logger(), "Sonar Oculus Network research Start.");
-#endif
 
     // Clear and intialize values of server and client network info
     lengthServerUDP = sizeof(serverUDP);
@@ -153,9 +150,8 @@ void SonarOculusNode::searchSonar()
 
 void SonarOculusNode::connectToSonar()
 {
-#if DEBUG
+
     RCLCPP_INFO(this->get_logger(), "Sonar Oculus Network TCP Connection Start.");
-#endif
 
     // Setting up TCP socket to the sonar IP after discovery 
     bzero((char *)&serverTCP, lengthServerTCP);
@@ -203,15 +199,19 @@ void SonarOculusNode::publishPing()
     // if (sonar.m_readData.m_osBuffer->m_rawSize == 0) {
     //     return;
     // }
+    RCLCPP_DEBUG(this->get_logger(), "Start ping publish ... ");
 
     unsigned int nbins = sonar.m_readData.m_osBuffer[0].m_rfm.nRanges;
     unsigned int nbeams = sonar.m_readData.m_osBuffer[0].m_rfm.nBeams;
     unsigned int id     = sonar.m_readData.m_osBuffer[0].m_rfm.pingId;
+    
+    RCLCPP_DEBUG(this->get_logger(), "Current state of the data collected: \n nbeams = %d, nbins = %d, id = %d \n m_rawSize = %d", nbeams, nbins, id, sonar.m_readData.m_osBuffer[0].m_rawSize);
 
     if (nbeams > 0 && nbins > 0 && id > latest_id_) {
         latest_id_ = id;
-
+        RCLCPP_DEBUG(this->get_logger(), "passing first check on nbeams and id. \n nbeams = %d, nbins = %d, id = %d ... ", nbeams, nbins, id);
         if (sonar.m_readData.m_osBuffer[0].m_rawSize) {
+            RCLCPP_DEBUG(this->get_logger(), "passing second check on sonar rawsize m_rawSize = %d ...", sonar.m_readData.m_osBuffer[0].m_rawSize);
             // --- build sensor_msgs::msg::Image
             sensor_msgs::msg::Image sonar_image_msg;
             sonar_image_msg.header.frame_id = frame_id;
@@ -252,11 +252,11 @@ void SonarOculusNode::publishPing()
             cv_bridge::CvImagePtr cv_ptr;
 
             //define target format for compression	
-            std::stringstream targetFormat;        
-            targetFormat << "8UC1";
+            // std::stringstream targetFormat;        
+            // targetFormat << "8UC1";
 
             //const_cast<sensor_msgs::Image &>(sonar_image).step = 512;
-            cv_ptr = cv_bridge::toCvCopy(sonar_image,targetFormat.str());
+            cv_ptr = cv_bridge::toCvCopy(sonar_image, "mono8");
 
             //compress image here, note this command compresses AND sets the compressed image to the message
             cv::imencode(".jpg", cv_ptr->image, ping_msg.ping.data, params);
@@ -280,6 +280,7 @@ void SonarOculusNode::publishPing()
 
             // publish
             ping_pub_->publish(ping_msg);
+            RCLCPP_DEBUG(this->get_logger(), "Ping message published !");
         }
     }
 }
