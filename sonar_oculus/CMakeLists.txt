@@ -12,7 +12,7 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(sonar_oculus_interface REQUIRED)
-
+find_package(tf2_ros REQUIRED)
 
 add_executable(${PROJECT_NAME} src/${PROJECT_NAME}.cpp src/OculusClient.cpp)
 
@@ -22,6 +22,7 @@ ament_target_dependencies(${PROJECT_NAME}
   cv_bridge
   sonar_oculus_interface
   sensor_msgs
+  tf2_ros
   OpenCV)
 
 target_include_directories(${PROJECT_NAME} PUBLIC

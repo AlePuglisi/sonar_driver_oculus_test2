@@ -53,6 +53,13 @@ def generate_launch_description():
         output="screen",
         arguments=[LaunchConfiguration("model")],
     )
+
+    sonar_frame_static_tf_node = Node(
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            output="screen" ,
+            arguments=["0", "0", "0", "0", "0", "0", "map", "sonar"]
+    )
     
     return LaunchDescription([
         rqt_arg,
@@ -61,4 +68,5 @@ def generate_launch_description():
         log_level_arg,
         sonar_node,
         sonar_viewer_node,
+        sonar_frame_static_tf_node,
     ])
