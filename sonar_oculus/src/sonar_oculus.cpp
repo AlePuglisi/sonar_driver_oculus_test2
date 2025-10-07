@@ -77,7 +77,7 @@ void SonarOculusNode::searchSonar()
             ip = "192.168.2.4";
             partNumber = OculusPartNumberType::partNumberM1200d;
         } else if (model == "M3000d") {
-            ip = "192.168.2.5";
+            ip = "169.254.22.70";
             partNumber = OculusPartNumberType::partNumberM3000d;
         }else {
             RCLCPP_WARN(this->get_logger(), "Model parameter provided but not recognized: '%s'. Will attempt discovery.", model.c_str());

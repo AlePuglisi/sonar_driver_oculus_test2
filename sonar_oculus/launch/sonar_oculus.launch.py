@@ -3,6 +3,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+import os
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     # Declare launch arguments
@@ -21,6 +23,12 @@ def generate_launch_description():
                                       description="sonar model (M750d / M1200d / M300d)"
     )
 
+    params_config = os.path.join(
+        get_package_share_directory('sonar_oculus'),
+        'config',
+        'sonar_oculus_params.yaml'
+        )
+    
     # Node for sonar
     sonar_node = Node(
         package="sonar_oculus",
@@ -28,7 +36,7 @@ def generate_launch_description():
         name=[ "sonar_oculus_", LaunchConfiguration("model") ],
         output="screen",
     #   condition=IfCondition(LaunchConfiguration("sonar")),
-        parameters=["config/sonar_oculus_params.yaml"], 
+        parameters=[params_config], 
     )
 
     # Node for sonar viewer
