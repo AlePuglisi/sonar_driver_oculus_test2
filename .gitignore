@@ -1,9 +1,5 @@
 # VS Code Configuration
 .vscode
 
-# CMake output
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-sonar_driver
-Makefile
+# build directory
+/build
