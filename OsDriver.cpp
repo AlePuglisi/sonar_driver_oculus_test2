@@ -13,7 +13,10 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
 {
     sonar.m_hostname = ip_addr;
     cout << "Sonar Driver [initialization]: Strating Oculus Sonar Driver initialization ..." << endl ; 
+
+    // [TODO] REMOVE THIS -- CURRENTLY JUST FOR DEBUG  
     initializeSonar(init_file_name);
+    // Config should be initialized only AFTER connection
 
     if (connectToSonar()) {
         cout << "Sonar Driver [connection]: Initializing Fire Configuration" << endl ; 
@@ -102,7 +105,7 @@ bool OsDriver::initializeSonar(string file_name)
         file.close();
     }
     else{
-        cout << "Sonar Driver [pre-configuration]: File name not give, usingdefault sonar configuration" << endl; 
+        cout << "Sonar Driver [pre-configuration]: File name not give, using default sonar configuration" << endl; 
     }
     
     
