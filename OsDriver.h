@@ -1,11 +1,16 @@
 #include "OsClientCtrl.h"
 
+#include <fstream>
+#include <sstream>
+
+#define IP_ADDR "169.254.22.70"
 
 using namespace std;
 
 struct FireConfig
 {
     int mode; 
+    PingRateType pingRate;
     double range; 
     double gain; 
     double speedOfSound; 
@@ -19,21 +24,28 @@ struct FireConfig
 class OsDriver
 {
 public:
-    OsDriver(string ip_addr);
+    OsDriver();
+    OsDriver(string ip_addr, string init_file_name);
     ~OsDriver();
 
     // attributes
-    string sonarIp;         // sonar IP for connection
-    uint8_t sonarImage[10];   // current sonar image (FIX THIS RESIZABLE !)
-    OsClientCtrl sonar;     // sonar API 
+    string sonarIp;             // Sonar IP for connection
+    uint8_t sonarImage[10];     // Current sonar image (FIX THIS RESIZABLE !)
+    OsClientCtrl sonar;         // Sonar API 
+    FireConfig sonarFireConfig; // Sonar Fire configuration
 
     // methods 
-    bool connectToSonar(); // establish TCP connection
-    void processImage();                 // processing snar image (Maybe NOT Required) [!]
-    void showImage();                    // visualize the sonar image in real time 
+    bool connectToSonar();     // Establish TCP connection
+    bool initializeSonar(string file_name);    // Initialize fire configuration after connecting 
+    bool reconfigureSonar();   // Change fire configuration (mode, range, etc)
+    void processImage();       // Processing snar image (Maybe NOT Required) [!]
+    void showImage();          // Visualize the sonar image in real time 
 
-    void reconfiggureSonar();            // change fire configuration (mode, range, etc)
-    void fireSonar();                    // send fire request to sonar 
+    bool setConfig(int modeIn, int pingRateIn, double rangeIn, double gainIn, 
+        double speedOfSoundIn, double salinityIn, bool gainAssistIn, 
+        uint8_t gammaCorrectionIn, uint8_t netSpeedLimitIn); // Check consistency of configuration request and set it
+
+    void fireSonar();                                        // Send fire request to sonar 
 
 
 };
