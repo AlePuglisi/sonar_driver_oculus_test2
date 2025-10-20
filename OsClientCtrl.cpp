@@ -137,7 +137,7 @@ void OsBufferEntry::ProcessRaw(char* pData)
 				  memcpy(m_pBrgs, pData + size, beams * sizeof(short));
 			}
 			else {
-				std::cout << "Error in Simple Return Fire Message" << std::endl;
+				std::cerr << "Sonar Client (BufferEntry) [ProcessRaw]: Error in Simple Return Fire Message" << std::endl;
 			}
 
 		  break;
@@ -145,7 +145,7 @@ void OsBufferEntry::ProcessRaw(char* pData)
 		  case messagePingResult :
 		  {
 			// Full fire message
-			  std::cout << "Got full ping result" << std::endl;
+			  std::cout << "Sonar Client (BufferEntry) [ProcessRaw]: Got full ping result" << std::endl;
 
 			m_simple = false;
 			  memcpy(&m_rff, pData, sizeof(OculusReturnFireMessage));
@@ -164,7 +164,7 @@ void OsBufferEntry::ProcessRaw(char* pData)
 					memcpy(m_pBrgs, pData + sizeof(OculusReturnFireMessage), m_rff.ping.nBeams * sizeof(short));
 				}
 			  else
-				std::cout << "Error in Simple Return Fire Message. Byte Match:" << std::endl;// + QString::number(m_rfm.fireMessage.head.payloadSize + sizeof(OculusMessageHeader)) + " != " + QString::number(m_rfm.imageOffset + m_rfm.imageSize);
+				std::cerr << "Sonar Client (BufferEntry) [ProcessRaw]: Error in Simple Return Fire Message. Byte Match:" << std::endl;// + QString::number(m_rfm.fireMessage.head.payloadSize + sizeof(OculusMessageHeader)) + " != " + QString::number(m_rfm.imageOffset + m_rfm.imageSize);
 
 
 			// Construct a SimplePingResult message
@@ -231,7 +231,7 @@ void OsReadThread::SetActive(bool active)
 void OsReadThread::Startup()
 {
   if (IsActive())
-    std::cout << "Cannot start read thread: Already running" << std::endl;
+    std::cout << "Sonar Client (Read Thread) [Startup]: Cannot start read thread: Already running" << std::endl;
   else
   {
     SetActive(true);
@@ -251,7 +251,7 @@ void OsReadThread::Shutdown()
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
   else
-    std::cout << "Cannot shut down read thread: Not running" << std::endl;
+    std::cout << "Sonar Client (Read Thread) [Shutdown]: Cannot shut down read thread: Not running" << std::endl;
 }
 
 
@@ -272,7 +272,7 @@ void OsReadThread::ProcessRxBuffer()
     if (pOmh->oculusId != 0x4f53)
     {
       m_nFlushes++;
-      std::cout << "Having to flush buffer, unrecognised data. #:" << std::to_string(m_nFlushes) << std::endl;
+      std::cout << "Sonar Client (Read Thread) [ProcessRxBuffer]: Having to flush buffer, unrecognised data. #:" << std::to_string(m_nFlushes) << std::endl;
       m_nRxIn = 0;
       return;
     }
@@ -310,12 +310,12 @@ void OsReadThread::ProcessPayload(char* pData, uint64_t nData)
 
   }
   else if (pOmh->msgId == messageUserConfig) {
-	  std::cout << "Got a USER CONFIG message" << std::endl;
+	  std::cout << "Sonar Client (Read Thread) [ProcessPayload]: Got a USER CONFIG message" << std::endl;
 
   }
   //JGS20170115 ignore dummy messages
   else if (pOmh->msgId != messageDummy )
-    std::cout <<  "Unrecognised message ID:" << std::to_string(pOmh->msgId) << std::endl;
+    std::cout <<  "Sonar Client (Read Thread) [ProcessPayload]: Unrecognised message ID:" << std::to_string(pOmh->msgId) << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -343,7 +343,7 @@ void OsReadThread::run()
   sockTCP = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sockTCP < 0) {
-      throw std::runtime_error(std::string("Error opening TCP socket: ") + strerror(errno));
+      throw std::runtime_error(std::string("Sonar Client (Read Thread) [run]: Error opening TCP socket: ") + strerror(errno));
       SetActive(false);
 
       delete m_pSocket;
@@ -356,7 +356,7 @@ void OsReadThread::run()
   if (connect(sockTCP, (struct sockaddr *)&serverTCP, lengthServerTCP) < 0) {
       close(sockTCP);
       sockTCP = -1;
-      throw std::runtime_error(std::string("Error connecting TCP socket: ") + strerror(errno));
+      throw std::runtime_error(std::string("Sonar Client (Read Thread) [run]: Error connecting TCP socket: ") + strerror(errno));
       SetActive(false);
 
       delete m_pSocket;
@@ -367,10 +367,10 @@ void OsReadThread::run()
 
   // adjust receive buffer size
   if (setsockopt(sockTCP, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size)) < 0) {
-      std::cout << "Warning: couldn't increase TCP RCVBUF" << std::endl;
+      std::cout << "Sonar Client (Read Thread) [run]: Warning, couldn't increase TCP RCVBUF" << std::endl;
   }
   if (setsockopt(sockTCP, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0) {
-       std::cout << "Warning: couldn't set SO_KEEPALIVE" << std::endl;
+       std::cout << "Sonar Client (Read Thread) [run]: Warning, couldn't set SO_KEEPALIVE" << std::endl;
   }
 
   m_pSocket = &sockTCP;
@@ -430,7 +430,7 @@ void OsReadThread::run()
   delete m_pSocket;
   m_pSocket = nullptr;
 
-  std::cout << "Read Thread exited" << std::endl;
+  std::cout << "Sonar Client (Read Thread) [run]: Read Thread exited" << std::endl;
 }
 
 
@@ -450,6 +450,8 @@ OsClientCtrl::OsClientCtrl()
 {
   m_hostname   = "localhost";
   m_mask       = "";
+
+  m_TCPconnected    = false; 
 
   // Link back this client to the reader thread
   m_readData.m_pClient = this;
@@ -476,14 +478,16 @@ bool OsClientCtrl::Connect()
   while (m_readData.m_pSocket == nullptr and timer < 50){
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); 
     timer++;
-    std::cout << "Sonar Client: Trying to connect ..." << std::endl ; 
+    std::cout << "Sonar Client [Connect]: Trying to connect ..." << std::endl ; 
   }
 
   if (m_readData.m_pSocket == nullptr ){
-    std::cout << "Sonar Client: Failed to connect at ip: " << m_hostname.c_str() << std::endl ; 
+    std::cerr << "Sonar Client [Connect]: Failed to connect at ip: " << m_hostname.c_str() << std::endl ; 
+    m_TCPconnected = false;
     return false;
   }
 
+  m_TCPconnected = true;
   return true;
 }
 
@@ -542,7 +546,7 @@ void OsClientCtrl::WriteToDataSocket(char* pData, uint16_t length)
 //};
 
 // ----------------------------------------------------------------------------
-void OsClientCtrl::Fire(int mode, double range, double gain, double speedOfSound, double salinity, bool gainAssist, uint8_t gamma, uint8_t netSpeedLimit)
+void OsClientCtrl::Fire(int mode, PingRateType pingRate, double range, double gain, double speedOfSound, double salinity, bool gainAssist, uint8_t gamma, uint8_t netSpeedLimit)
 {
   if (IsOpen())
   {
@@ -568,7 +572,8 @@ void OsClientCtrl::Fire(int mode, double range, double gain, double speedOfSound
 
     sfm.flags = flags;				// Turn on the gain assistance
     sfm.gammaCorrection = gamma;
-    sfm.pingRate      = pingRateHigh;
+
+    sfm.pingRate      = pingRate;
     sfm.networkSpeed  = netSpeedLimit;
     sfm.masterMode    = mode;
     sfm.range         = range;

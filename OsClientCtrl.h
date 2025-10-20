@@ -155,7 +155,8 @@ public:
   bool Disconnect();
   bool IsOpen();
   void WriteToDataSocket(char* pData, uint16_t length);
-  void Fire(int mode, double range, double gain, double speedOfSound, double salinity, bool gainAssist, uint8_t gammaCorrection, uint8_t netSpeedLimit);
+  void Fire(int mode, PingRateType pingRate, double range, double gain, double speedOfSound, 
+    double salinity, bool gainAssist, uint8_t gammaCorrection, uint8_t netSpeedLimit);
   void DummyMessage();
 
 
@@ -168,6 +169,8 @@ public:
 
   std::string  m_hostname;    
   std::string  m_mask;
+
+  bool         m_TCPconnected;
 
   UserConfig   m_config;   // Oculus user configuration
   OsReadThread m_readData; // The worker thread for reading data
