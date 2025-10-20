@@ -33,9 +33,11 @@ public:
     uint8_t sonarImage[10];     // Current sonar image (FIX THIS RESIZABLE !)
     OsClientCtrl sonar;         // Sonar API 
     FireConfig sonarFireConfig; // Sonar Fire configuration
+    bool sonarConnected = false; 
 
     // methods 
     bool connectToSonar();     // Establish TCP connection
+    bool readThreadActive();   // Check if read thread is still running
     bool initializeSonar(string file_name);    // Initialize fire configuration after connecting 
     bool reconfigureSonar();   // Change fire configuration (mode, range, etc)
     void processImage();       // Processing snar image (Maybe NOT Required) [!]

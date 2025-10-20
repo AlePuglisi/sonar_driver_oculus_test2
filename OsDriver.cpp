@@ -15,7 +15,8 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
     cout << "Sonar Driver [initialization]: Strating Oculus Sonar Driver initialization ..." << endl ; 
 
     // [TODO] REMOVE THIS -- CURRENTLY JUST FOR DEBUG  
-    initializeSonar(init_file_name);
+    // if (! initializeSonar(init_file_name))
+    //     return;
     // Config should be initialized only AFTER connection
 
     if (connectToSonar()) {
@@ -23,7 +24,7 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
         initializeSonar(init_file_name);
     } else { 
         cerr << "Sonar Driver [connection]: Sonar Not Connected, Not Initializing Fire Configuration" << endl ; 
-        cerr << "Sonar Driver [connection]: Try to connect again, double check IP ... " << endl ; 
+        cerr << "Sonar Driver [connection]: Failed to connect, double check sonar IP ... " << endl ; 
         return;
     }
 
@@ -31,7 +32,10 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
 }
 
 OsDriver::~OsDriver() {
-    sonar.Disconnect();
+
+    if (sonar.m_TCPconnected)
+        sonar.Disconnect();
+
 }
 
 bool OsDriver::connectToSonar() 
@@ -41,19 +45,26 @@ bool OsDriver::connectToSonar()
     cout << "Sonar Driver [connection]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
 
 
-    while ((trial_number < 5) and (!sonar.Connect())){
+    while ((trial_number <= 5) and (!sonar.Connect())){
         trial_number += 1;
-        cout << "Sonar Driver [connection]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
+        if (trial_number <= 5)
+            cout << "Sonar Driver [connection]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
     }
 
     if(sonar.m_TCPconnected){
         cout << "Sonar Driver [connection]: Connected to Sonar at ip: " << sonar.m_hostname << " ! " << endl ; 
     } else {
         cerr << "Sonar Driver [connection]: Failed to connect to Sonar at ip: " << sonar.m_hostname << endl ; 
-        return false; 
+        sonarConnected = false; 
+        return sonarConnected; 
     }
 
-    return true;
+    sonarConnected = true; 
+    return sonarConnected; 
+}
+
+bool OsDriver::readThreadActive(){
+    return sonar.IsOpen();
 }
 
 bool OsDriver::initializeSonar(string file_name) 
@@ -71,8 +82,8 @@ bool OsDriver::initializeSonar(string file_name)
 
     // Retrieve data from csv 
     if (file_name != "None"){
-        cout << "Sonar Driver [pre-configuration]: Retrieving configuration from csv" << endl; 
         string file_path = string(CONFIG_DIR_PATH) + file_name;
+        cout << "Sonar Driver [pre-configuration]: Retrieving configuration from csv file: " << file_path << endl; 
         ifstream file(file_path);
         string line;
         getline(file, line);
