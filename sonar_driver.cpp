@@ -30,8 +30,13 @@ int main(int argc, char *argv[])
 
   OsDriver sonar_driver = OsDriver(IP_ADDR, sonar_config_file);
 
+  if(!sonar_driver.sonarConnected){
+    cerr << "Sonar Not connected after five tentatives ... Driver OFF, check configuration, IP or Sonar state and retry " << endl; 
+    return 0; 
+  }
+
   // Send Periodic Fire Message request 
-  while(sonar_driver.sonar.IsOpen()){
+  while(sonar_driver.sonarConnected and sonar_driver.readThreadActive()){
     sonar_driver.fireSonar();
 
     // retrieve data saved on sonar 
