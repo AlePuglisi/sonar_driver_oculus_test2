@@ -1,0 +1,10 @@
+param,value 
+mode,1
+pingRate,5
+range,15.0
+gain,20.0    
+speedOfSound,0.0 
+salinity,0.0 
+gainAssist,false
+gammaCorrection,0x7f
+netSpeedLimit,0xff
