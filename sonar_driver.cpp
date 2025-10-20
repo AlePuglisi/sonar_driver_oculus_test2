@@ -16,46 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************/
+#include "OsDriver.h"
 #include "OsClientCtrl.h"
 
 int main(int argc, char *argv[])
 {
-  OsClientCtrl sonar = OsClientCtrl();
 
-  sonar.m_hostname = "169.254.22.70";
+  string sonar_config_file = "None";
 
-  int trial_number = 1;
-  std::cout << "Sonar Driver: Tentative " << std::to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << std::endl ; 
-
-
-  while ((trial_number < 5) and (!sonar.Connect())){
-    trial_number += 1;
-    std::cout << "Sonar Driver: Tentative " << std::to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << std::endl ; 
+  if (argc >= 2){
+    sonar_config_file = string(argv[1]);
   }
 
-  if(sonar.Connect()){
-    std::cout << "Sonar Driver: Connected to Sonar at ip: " << sonar.m_hostname << std::endl ; 
-  } else {
-    std::cout << "Sonar Driver: Failed to connect to Sonar at ip: " << sonar.m_hostname << std::endl ; 
-    return 0; 
-  }
-
-  // Set up Fire Message request 
-  int mode                 = 1; 
-  double range             = 10.0; 
-  double gain              = 20.0; 
-  double speedOfSound      = 0.0; 
-  double salinity          = 0.0; 
-  bool gainAssist          = false;  
-  uint8_t gammaCorrection  = 0x7f; 
-  uint8_t netSpeedLimit    = 0xff; 
+  OsDriver sonar_driver = OsDriver(IP_ADDR, sonar_config_file);
 
   // Send Periodic Fire Message request 
-  while(sonar.IsOpen()){
-    sonar.Fire(mode, range, gain, speedOfSound, salinity, gainAssist, gammaCorrection, netSpeedLimit);
+  while(sonar_driver.sonar.IsOpen()){
+    sonar_driver.fireSonar();
 
     // retrieve data saved on sonar 
-
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
