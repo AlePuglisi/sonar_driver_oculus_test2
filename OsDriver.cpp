@@ -209,11 +209,11 @@ void OsDriver::startSonarView()
     }
 
     // Start OpenCV Image show as thread 
-    thread viewThread(showImage);
+    thread viewThread(&OsDriver::showImage, this);
     viewThread.detach(); 
 
     // Compute period from given frequency 
-    int read_period = int(1/UPDATE_FREQUENCY * 1e9); 
+    int read_period = int(1 / UPDATE_FREQUENCY * 1e9); 
     // Start Sensor Update loop 
     while(readThreadActive()){
         updateImage(); 
@@ -228,12 +228,12 @@ void OsDriver::startSonarDataProcessing()
   fireSonar();
 
   // Start a view thread on the data 
-  thread sonarViewThread(startSonarView);
+  thread sonarViewThread(&OsDriver::startSonarView, this);
   sonarViewThread.detach(); 
   cout << "Sonar Driver [startSonarDataProcessing]: Detach View Thread" << endl; 
 
   // Compute Fire period from given frequency 
-  int fire_period = int(1/FIRE_FREQUENCY * 1e9); 
+  int fire_period = int(1 / FIRE_FREQUENCY * 1e9); 
 
   // Send Periodic Fire Message request 
   while(sonarConnected and readThreadActive()){
@@ -241,7 +241,7 @@ void OsDriver::startSonarDataProcessing()
     fireSonar();
 
     // retrieve data saved on sonar 
-    std::this_thread::sleep_for(std::chrono::milliseconds(fire_period));
+    std::this_thread::sleep_for(chrono::nanoseconds(fire_period));
   }
 
   cout << "Sonar Driver [startSonarDataProcessing]: Stop sonar data retrieval" << endl; 
