@@ -11,7 +11,15 @@ OsDriver::OsDriver()
 OsDriver::OsDriver(string ip_addr, string init_file_name) 
 {
     sonar.m_hostname = ip_addr;
-    cout << "Sonar Driver [initialization]: Strating Oculus Sonar Driver initialization ..." << endl ; 
+    cout << "Sonar Driver [OsDriver-initialization]: Strating Oculus Sonar Driver initialization ..." << endl ; 
+    
+    // Initialize Class Attributes
+    latest_id = 0; 
+    sonarImage = nullptr; 
+    sonarImageHeight = 0; 
+    sonarImageWidth = 0; 
+    sonarRaw = nullptr; 
+    sonarConnected = false; 
 
     // [TODO] REMOVE THIS -- CURRENTLY JUST FOR DEBUG  
     // if (! initializeSonar(init_file_name))
@@ -21,16 +29,16 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
     // Establish TCP connection 
  
     if (connectToSonar()) { // Connection succes
-        cout << "Sonar Driver [connection]: Initializing Fire Configuration" << endl ; 
+        cout << "Sonar Driver [OsDriver-connection]: Initializing Fire Configuration" << endl ; 
         // After connecting, initiaize sonar fire parameters from csv file or default 
         initializeSonar(init_file_name);
     } else { // Conncetion fail       
-        cerr << "Sonar Driver [connection]: Sonar Not Connected, Not Initializing Fire Configuration" << endl ; 
-        cerr << "Sonar Driver [connection]: Failed to connect, double check sonar IP ... " << endl ; 
+        cerr << "Sonar Driver [OsDriver-connection]: Sonar Not Connected, Not Initializing Fire Configuration" << endl ; 
+        cerr << "Sonar Driver [OsDriver-connection]: Failed to connect, double check sonar IP ... " << endl ; 
         return; // Stop 
     }
 
-    cout << "Sonar Driver [initialization]: Oculus Sonar Driver Initialized ! Ready to be used" << endl ; 
+    cout << "Sonar Driver [OsDriver-initialization]: Oculus Sonar Driver Initialized ! Ready to be used" << endl ; 
 }
 
 OsDriver::~OsDriver() {
@@ -44,20 +52,20 @@ bool OsDriver::connectToSonar()
 {
     // Try to connect to the Oculus Sonar at the given IP 5 times 
     int trial_number = 1;
-    cout << "Sonar Driver [connection]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
+    cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
 
 
     while ((trial_number <= 5) and (!sonar.Connect())){
         trial_number += 1;
         if (trial_number <= 5)
-            cout << "Sonar Driver [connection]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
+            cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
     }
 
     // Log connection results
     if(sonar.m_TCPconnected){
-        cout << "Sonar Driver [connection]: Connected to Sonar at ip: " << sonar.m_hostname << " ! " << endl ; 
+        cout << "Sonar Driver [connectToSonar]: Connected to Sonar at ip: " << sonar.m_hostname << " ! " << endl ; 
     } else {
-        cerr << "Sonar Driver [connection]: Failed to connect to Sonar at ip: " << sonar.m_hostname << endl ; 
+        cerr << "Sonar Driver [connectToSonar]: Failed to connect to Sonar at ip: " << sonar.m_hostname << endl ; 
         sonarConnected = false; 
         return sonarConnected; 
     }
@@ -87,7 +95,7 @@ bool OsDriver::initializeSonar(string file_name)
     // Retrieve data from csv 
     if (file_name != "None"){ // Given configuration file name 
         string file_path = string(CONFIG_DIR_PATH) + file_name; //CONFIG_DIR_PATH defined in the CMakeLists.txt
-        cout << "Sonar Driver [pre-configuration]: Retrieving configuration from csv file: " << file_path << endl; 
+        cout << "Sonar Driver [initializeSonar]: Retrieving configuration from csv file: " << file_path << endl; 
         ifstream file(file_path);
         string line;
         getline(file, line);
@@ -120,7 +128,7 @@ bool OsDriver::initializeSonar(string file_name)
         file.close();
     }
     else{ // "None" file name 
-        cout << "Sonar Driver [pre-configuration]: File name not give, using default sonar configuration" << endl; 
+        cout << "Sonar Driver [initializeSonar]: File name not give, using default sonar configuration" << endl; 
     }
     
     // Use given configuration values to update sonar config, only if consistent values 
@@ -138,21 +146,32 @@ bool OsDriver::reconfigureSonar()
 
 void OsDriver::updateImage() 
 {
-    // Initialize current sonar image size 
-    unsigned int nbins = sonar.m_readData.m_osBuffer[0].m_rfm.nRanges;
-    unsigned int nbeams = sonar.m_readData.m_osBuffer[0].m_rfm.nBeams;
-
-    sonarImageHeight = nbins; 
-    sonarImageWidth  = nbeams; 
-
-    // Realloc memory for sonar image pointer 
-    sonarImage = (unsigned char*) realloc (sonarImage, nbins * nbeams); 
-    // Update image 
-    memcpy(sonarImage, sonar.m_readData.m_osBuffer[0].m_pImage, 
-           sonar.m_readData.m_osBuffer[0].m_rfm.imageSize);
-    // Update raw sonar data 
+    // Update sonar data 
+    uint32_t id = sonar.m_readData.m_osBuffer[0].m_rfm.pingId;
+    uint16_t nbins = sonar.m_readData.m_osBuffer[0].m_rfm.nRanges;
+    uint16_t nbeams = sonar.m_readData.m_osBuffer[0].m_rfm.nBeams;
     uint32_t rawSize = sonar.m_readData.m_osBuffer[0].m_rawSize; 
-    memcpy(sonarRaw, sonar.m_readData.m_osBuffer[0].m_pRaw, rawSize); 
+
+    // Update image only if new image and data received 
+    if(id > latest_id && rawSize > 0) {
+        latest_id = id; 
+        
+        // Initialize current sonar image size 
+        sonarImageHeight = nbins; 
+        sonarImageWidth  = nbeams; 
+
+        // Realloc memory for sonar image pointer 
+        sonarImage = (unsigned char*) realloc (sonarImage, nbins * nbeams); 
+        // Update image 
+        memcpy(sonarImage, sonar.m_readData.m_osBuffer[0].m_pImage, 
+            sonar.m_readData.m_osBuffer[0].m_rfm.imageSize);
+
+        // Update raw sonar data 
+        sonarRaw = (uint8_t*) realloc (sonarRaw, rawSize); 
+        memcpy(sonarRaw, sonar.m_readData.m_osBuffer[0].m_pRaw, rawSize); 
+
+        cout << "Sonar Driver [updateImage]: Update Sonar Image and Raw Data" << endl; 
+    }
 }
 
 void OsDriver::showImage() 
@@ -168,7 +187,7 @@ void OsDriver::showImage()
         //cv::Mat frame(sonarImageHeight, sonarImageWidth, CV_8UC1, sonarImage);
     
         // Show the image in the window
-        cv::imshow("Sensor Stream", frame);
+        cv::imshow("Oculus Sonar View", frame);
 
         // refresh view 
         int key = cv::waitKey(1);
@@ -180,6 +199,27 @@ void OsDriver::showImage()
     cv::destroyAllWindows();
 
 }       
+
+void OsDriver::startSonarView()
+{
+    // Wait until first image retrieved to create CV Window 
+    while(sonarImage == nullptr) { 
+        cout << "Sonar Driver [startSonarView]: No image yet received from Oculus Sonar" << endl; 
+        this_thread::sleep_for(chrono::milliseconds(100)); 
+    }
+
+    // Start OpenCV Image show as thread 
+    thread viewThread(showImage);
+    viewThread.join(); 
+
+    // Compute period from given frequency 
+    int period = int(1/UPDATE_FREQUENCY * 1e9); 
+    // Start Sensor Update loop 
+    while(readThreadActive()){
+        updateImage(); 
+        this_thread::sleep_for(chrono::nanoseconds(period)); 
+    }
+}
 
 bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gainIn, double speedOfSoundIn, 
     double salinityIn, bool gainAssistIn, uint8_t gammaCorrectionIn, uint8_t netSpeedLimitIn)
@@ -198,22 +238,22 @@ bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gain
     else if (pingRateIn == 5)
         sonarFireConfig.pingRate = pingRateHighest; // 40Hz   
     else {
-        cerr << "Sonar Driver [configuration]: ping rate must be given as an integer from 0 to 5" << endl;
+        cerr << "Sonar Driver [setConfig]: ping rate must be given as an integer from 0 to 5" << endl;
         return false;
     }
 
-    // check master Mode 1= Low Freq / 2 = High Freq
+    // Ensure Range is consistent with master Mode 1= Low Freq / 2 = High Freq
     sonarFireConfig.mode = modeIn;
     if (modeIn == 1) {
         if (rangeIn > 0 and rangeIn <= RANGE_MAX_LF){
             sonarFireConfig.range = rangeIn; 
         }
         else if(rangeIn <= 0) {
-            cerr << "Sonar Driver [configuration]: Negative or 0 range are not accepted" << endl;
+            cerr << "Sonar Driver [setConfig]: Negative or 0 range are not accepted" << endl;
             return false;
         }
         else if(rangeIn > RANGE_MAX_LF) {
-            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << 
+            cerr << "Sonar Driver [setConfig]: The given range: " << to_string(rangeIn) << 
                      "m is above the " <<to_string(RANGE_MAX_LF) << "m limits of Low Freq Mode" << endl;
             return false;
         }
@@ -222,22 +262,22 @@ bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gain
             sonarFireConfig.range = rangeIn; 
         }
         else if(rangeIn <= 0) {
-            cerr << "Sonar Driver [configuration]: Negative or 0 range are not accepted" << endl;
+            cerr << "Sonar Driver [setConfig]: Negative or 0 range are not accepted" << endl;
             return false;
         }
         else if(rangeIn > RANGE_MAX_HF) {
-            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << 
+            cerr << "Sonar Driver [setConfig]: The given range: " << to_string(rangeIn) << 
                      "m is above the " <<to_string(RANGE_MAX_HF) << "m limits of High Freq Mode" << endl;
             return false;
         }
     }
 
-    // check gain value 
+    // check gain value (0-100 percentage)
     if(gainIn > 0 and gainIn <= 100){
         sonarFireConfig.gain = gainIn;
     }
     else {
-        cerr << "Sonar Driver [configuration]: gain must be given in percentage as a 0-100 double" << endl;
+        cerr << "Sonar Driver [setConfig]: gain must be given in percentage as a 0-100 double" << endl;
         return false; 
     }
 
@@ -250,7 +290,7 @@ bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gain
     sonarFireConfig.netSpeedLimit = netSpeedLimitIn;
 
     // Log results of configuration 
-    cout << "Sonar Driver [configuration]: Sonar Fire Configuration initialized !" << endl;
+    cout << "Sonar Driver [setConfig]: Sonar Fire Configuration initialized !" << endl;
     cout << "Current configuration: \n" << "Mode: " << to_string(modeIn) << "\nPing Rate: " << to_string(pingRateIn)
          << "\nRange: " << to_string(rangeIn) << "\nGain: " << gainIn << "\nSpeed of Sound:" << to_string(speedOfSoundIn)
          << "\nsalinity: " << to_string(salinityIn) << "\nGain Assist: " << boolalpha << to_string(gainAssistIn)
@@ -261,7 +301,7 @@ bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gain
 
 void OsDriver::fireSonar() 
 {
-    cout << "Sonar Driver [fire]: Fire request !" << endl;
+    cout << "Sonar Driver [fireSonar]: Fire request !" << endl;
     // Fire sonar using the assigned configuration 
     sonar.Fire(sonarFireConfig.mode, 
                sonarFireConfig.pingRate,

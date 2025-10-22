@@ -3,10 +3,13 @@
 #include <fstream>
 #include <sstream>
 #include <opencv2/opencv.hpp>
+#include <thread>
 
 #define IP_ADDR "169.254.22.70"  // Oculus Sonar IP
 #define RANGE_MAX_HF 5           // Maximum High Frequency range for M3000d Oculus
 #define RANGE_MAX_LF 30          // Maximum Low  Frequency range for M3000d Oculus
+
+#define UPDATE_FREQUENCY 100     // Frequency of Reading sonar data in Hz
 
 using namespace std;
 
@@ -39,9 +42,10 @@ public:
     int sonarImageWidth;         // Sonar Image Width
     int sonarImageHeight;        // Sonar Image Height
     uint8_t* sonarRaw;           // Sonar Raw data
+    unsigned int latest_id;      // Keep track of Ping image ID 
     OsClientCtrl sonar;          // Sonar API 
     FireConfig sonarFireConfig;  // Sonar Fire configuration
-    bool sonarConnected = false; // Flag for TCP connection state 
+    bool sonarConnected; // Flag for TCP connection state 
 
     // Driver Methods 
 
@@ -81,6 +85,11 @@ public:
      *
      */
     void showImage();                          // Visualize the sonar image in real time 
+    /**
+     * @brief Start View Thread to visualize sonar data 
+     *
+     */
+    void startSonarView();   
     /**
      * @brief Check consistency of configuration parameters request and set it
      *
