@@ -38,20 +38,7 @@ int main(int argc, char *argv[])
     return 0; 
   }
 
-  // Send a first fire message request 
-  sonar_driver.fireSonar();
-
-  // Start a view thread on the data 
-  thread sonarViewThread(&OsDriver::startSonarView, &sonar_driver);
-  sonarViewThread.join(); 
-
-  // Send Periodic Fire Message request 
-  while(sonar_driver.sonarConnected and sonar_driver.readThreadActive()){
-    sonar_driver.fireSonar();
-
-    // retrieve data saved on sonar 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-  }
+  sonar_driver.startSonarDataProcessing(); 
 
   return 0;
 
