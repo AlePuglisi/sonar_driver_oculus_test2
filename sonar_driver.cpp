@@ -22,25 +22,35 @@
 int main(int argc, char *argv[])
 {
 
+  // "None" file name uses default fire config 
   string sonar_config_file = "None";
-
+  // Check for user input as file name  
   if (argc >= 2){
     sonar_config_file = string(argv[1]);
   }
 
+  // Instantiate sonar class 
   OsDriver sonar_driver = OsDriver(IP_ADDR, sonar_config_file);
 
+  // Check if the initialization succesfully connected the sonar 
   if(!sonar_driver.sonarConnected){
     cerr << "Sonar Not connected after five tentatives ... Driver OFF, check configuration, IP or Sonar state and retry " << endl; 
     return 0; 
   }
+
+  // Send a first fire message request 
+  sonar_driver.fireSonar();
+
+  // Start a view thread on the data 
+  thread sonarViewThread(&OsDriver::startSonarView, &sonar_driver);
+  sonarViewThread.join(); 
 
   // Send Periodic Fire Message request 
   while(sonar_driver.sonarConnected and sonar_driver.readThreadActive()){
     sonar_driver.fireSonar();
 
     // retrieve data saved on sonar 
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
   return 0;
