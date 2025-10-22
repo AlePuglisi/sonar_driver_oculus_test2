@@ -4,7 +4,9 @@
 #include <sstream>
 #include <opencv2/opencv.hpp>
 
-#define IP_ADDR "169.254.22.70"
+#define IP_ADDR "169.254.22.70"  // Oculus Sonar IP
+#define RANGE_MAX_HF 5           // Maximum High Frequency range for M3000d Oculus
+#define RANGE_MAX_LF 30          // Maximum Low  Frequency range for M3000d Oculus
 
 using namespace std;
 

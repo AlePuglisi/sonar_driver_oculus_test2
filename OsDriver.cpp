@@ -1,7 +1,5 @@
 #include "OsDriver.h"
 
-string(CONFIG_DIR_PATH); // Defined in the CMakeLists.txt
-
 OsDriver::OsDriver()
 {
     // Use default configuration 
@@ -88,7 +86,7 @@ bool OsDriver::initializeSonar(string file_name)
 
     // Retrieve data from csv 
     if (file_name != "None"){ // Given configuration file name 
-        string file_path = string(CONFIG_DIR_PATH) + file_name;
+        string file_path = string(CONFIG_DIR_PATH) + file_name; //CONFIG_DIR_PATH defined in the CMakeLists.txt
         cout << "Sonar Driver [pre-configuration]: Retrieving configuration from csv file: " << file_path << endl; 
         ifstream file(file_path);
         string line;
@@ -207,27 +205,29 @@ bool OsDriver::setConfig(int modeIn, int pingRateIn, double rangeIn, double gain
     // check master Mode 1= Low Freq / 2 = High Freq
     sonarFireConfig.mode = modeIn;
     if (modeIn == 1) {
-        if (rangeIn > 0 and rangeIn <= 30){
+        if (rangeIn > 0 and rangeIn <= RANGE_MAX_LF){
             sonarFireConfig.range = rangeIn; 
         }
         else if(rangeIn <= 0) {
             cerr << "Sonar Driver [configuration]: Negative or 0 range are not accepted" << endl;
             return false;
         }
-        else if(rangeIn > 30) {
-            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << "m is above the 30m limits of Low Freq Mode" << endl;
+        else if(rangeIn > RANGE_MAX_LF) {
+            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << 
+                     "m is above the " <<to_string(RANGE_MAX_LF) << "m limits of Low Freq Mode" << endl;
             return false;
         }
     } else if (modeIn == 2) {
-        if (rangeIn > 0 and rangeIn <= 5){
+        if (rangeIn > 0 and rangeIn <= RANGE_MAX_HF){
             sonarFireConfig.range = rangeIn; 
         }
         else if(rangeIn <= 0) {
             cerr << "Sonar Driver [configuration]: Negative or 0 range are not accepted" << endl;
             return false;
         }
-        else if(rangeIn > 5) {
-            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << "m is above the 5m limits of High Freq Mode" << endl;
+        else if(rangeIn > RANGE_MAX_HF) {
+            cerr << "Sonar Driver [configuration]: The given range: " << to_string(rangeIn) << 
+                     "m is above the " <<to_string(RANGE_MAX_HF) << "m limits of High Freq Mode" << endl;
             return false;
         }
     }
