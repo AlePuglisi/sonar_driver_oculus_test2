@@ -48,6 +48,11 @@ OsDriver::~OsDriver() {
 
 }
 
+void OsDriver::setSaving(bool savingOption)
+{
+    savingOption = savingOption; 
+}
+
 bool OsDriver::connectToSonar() 
 {
     // Try to connect to the Oculus Sonar at the given IP 5 times 
@@ -55,9 +60,9 @@ bool OsDriver::connectToSonar()
     cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
 
 
-    while ((trial_number <= 5) and (!sonar.Connect())){
+    while ((trial_number <= RECONNECTION_TENTATIVE) and (!sonar.Connect())){
         trial_number += 1;
-        if (trial_number <= 5)
+        if (trial_number <= RECONNECTION_TENTATIVE)
             cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
     }
 
@@ -181,6 +186,16 @@ void OsDriver::showImage()
 
     cv::Mat frame(sonarImageHeight, sonarImageWidth, CV_8UC1, sonarImage);
 
+    cv::VideoWriter writer; 
+    if (savingOption){
+        int codec = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
+        double fps = UPDATE_FREQUENCY;                    // framerate of the created video stream
+        string filename = "./sonar_video.avi";            // name of the output video file
+        cv::Size videoSize = cv::Size(sonarImageWidth, sonarImageHeight);
+        writer.open(filename, codec, fps, videoSize, false);
+    }
+    
+
     // Example: simulate continuous updates
     while (true)
     {
@@ -188,6 +203,10 @@ void OsDriver::showImage()
     
         // Show the image in the window
         cv::imshow("Oculus Sonar View", frame);
+
+        if(savingOption){
+            writer.write(frame); 
+        }
 
         // refresh view 
         int key = cv::waitKey(1);
@@ -197,7 +216,7 @@ void OsDriver::showImage()
     }
 
     cv::destroyAllWindows();
-
+    writer.~VideoWriter(); 
 }       
 
 void OsDriver::startSonarView()

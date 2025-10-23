@@ -3,14 +3,18 @@
 #include <fstream>
 #include <sstream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
 #include <thread>
 
 #define IP_ADDR "169.254.22.70"  // Oculus Sonar IP
 #define RANGE_MAX_HF 5           // Maximum High Frequency range for M3000d Oculus
 #define RANGE_MAX_LF 30          // Maximum Low  Frequency range for M3000d Oculus
 
-#define UPDATE_FREQUENCY 100     // Frequency of Reading sonar data in Hz
+#define UPDATE_FREQUENCY  40     // Frequency of Reading sonar data in Hz
 #define FIRE_FREQUENCY     5     // Frequency of Sending Fire request in Hz
+
+#define RECONNECTION_TENTATIVE 5 // Number of tentatives of TCP reconnection 
 
 using namespace std;
 
@@ -46,10 +50,16 @@ public:
     unsigned int latest_id;      // Keep track of Ping image ID 
     OsClientCtrl sonar;          // Sonar API 
     FireConfig sonarFireConfig;  // Sonar Fire configuration
-    bool sonarConnected; // Flag for TCP connection state 
+    bool sonarConnected;         // Flag for TCP connection state 
+    bool savingOption;           // Flag to decide if saving Sonar Video
 
     // Driver Methods 
 
+    /**
+     * @brief Set save option mode, to decide if storing sonar video 
+     *
+     */
+    void setSaving(bool savingOption);    
     /**
      * @brief Establish TCP connection with the oculus sonar 
      *
