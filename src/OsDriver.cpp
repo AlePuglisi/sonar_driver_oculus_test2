@@ -16,10 +16,15 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
     // Initialize Class Attributes
     latest_id = 0; 
     sonarImage = nullptr; 
+    sonarImageSize = 0; 
     sonarImageHeight = 0; 
     sonarImageWidth = 0; 
     sonarRaw = nullptr; 
     sonarConnected = false; 
+
+    // Initialize update and fire period from given frequencies 
+    readPeriod = int(1 / UPDATE_FREQUENCY * 1e9); 
+    firePeriod = int(1 / FIRE_FREQUENCY   * 1e9); 
 
     // [TODO] REMOVE THIS -- CURRENTLY JUST FOR DEBUG  
     // if (! initializeSonar(init_file_name))
@@ -32,6 +37,44 @@ OsDriver::OsDriver(string ip_addr, string init_file_name)
         cout << "Sonar Driver [OsDriver-connection]: Initializing Fire Configuration" << endl ; 
         // After connecting, initiaize sonar fire parameters from csv file or default 
         initializeSonar(init_file_name);
+    } else { // Conncetion fail       
+        cerr << "Sonar Driver [OsDriver-connection]: Sonar Not Connected, Not Initializing Fire Configuration" << endl ; 
+        cerr << "Sonar Driver [OsDriver-connection]: Failed to connect, double check sonar IP ... " << endl ; 
+        return; // Stop 
+    }
+
+    cout << "Sonar Driver [OsDriver-initialization]: Oculus Sonar Driver Initialized ! Ready to be used" << endl ; 
+}
+
+OsDriver::OsDriver(string ip_addr, FireConfig2 fire_config) 
+{
+    sonar.m_hostname = ip_addr;
+    cout << "Sonar Driver [OsDriver-initialization]: Strating Oculus Sonar Driver initialization ..." << endl ; 
+    
+    // Initialize Class Attributes
+    latest_id = 0; 
+    sonarImage = nullptr; 
+    sonarImageSize = 0; 
+    sonarImageHeight = 0; 
+    sonarImageWidth = 0; 
+    sonarRaw = nullptr; 
+    sonarConnected = false; 
+
+    // Initialize update and fire period from given frequencies 
+    readPeriod = int(1 / UPDATE_FREQUENCY * 1e9); 
+    firePeriod = int(1 / FIRE_FREQUENCY   * 1e9); 
+
+    // [TODO] REMOVE THIS -- CURRENTLY JUST FOR DEBUG  
+    // if (! initializeSonar(init_file_name))
+    //     return;
+    // Config should be initialized only AFTER connection
+
+    // Establish TCP connection 
+ 
+    if (connectToSonar()) { // Connection succes
+        cout << "Sonar Driver [OsDriver-connection]: Initializing Fire Configuration" << endl ; 
+        // After connecting, initiaize sonar fire parameters from csv file or default 
+        initializeSonar(fire_config);
     } else { // Conncetion fail       
         cerr << "Sonar Driver [OsDriver-connection]: Sonar Not Connected, Not Initializing Fire Configuration" << endl ; 
         cerr << "Sonar Driver [OsDriver-connection]: Failed to connect, double check sonar IP ... " << endl ; 
@@ -138,6 +181,18 @@ bool OsDriver::initializeSonar(string file_name)
     return init_success; 
 }
 
+bool OsDriver::initializeSonar(FireConfig2 fire_config) 
+{
+    // Use given configuration values to update sonar config, only if consistent values 
+    // If a parameter is not initialized by the user, It uses the default FireConfig value
+    bool init_success = setConfig(fire_config.mode, fire_config.pingRate, fire_config.range, 
+                                  fire_config.gain, fire_config.speedOfSound, fire_config.salinity, 
+                                  fire_config.gainAssist, fire_config.gammaCorrection, fire_config.netSpeedLimit);
+
+    return init_success; 
+}
+
+
 bool OsDriver::reconfigureSonar() 
 {
     // [TODO] Implement a dynamic reconfiguration thread to change sonar fire config 
@@ -159,6 +214,8 @@ void OsDriver::updateImage()
         // Initialize current sonar image size 
         sonarImageHeight = nbins; 
         sonarImageWidth  = nbeams; 
+
+        sonarImageSize = sonar.m_readData.m_osBuffer[0].m_rfm.imageSize; 
 
         // Realloc memory for sonar image pointer 
         sonarImage = (unsigned char*) realloc (sonarImage, nbins * nbeams); 
@@ -212,12 +269,11 @@ void OsDriver::startSonarView()
     thread viewThread(&OsDriver::showImage, this);
     viewThread.detach(); 
 
-    // Compute period from given frequency 
-    int read_period = int(1 / UPDATE_FREQUENCY * 1e9); 
+    // Compute period from given frequency  
     // Start Sensor Update loop 
     while(readThreadActive()){
         updateImage(); 
-        this_thread::sleep_for(chrono::nanoseconds(read_period)); 
+        this_thread::sleep_for(chrono::nanoseconds(readPeriod)); 
     }
 }
 
@@ -232,16 +288,13 @@ void OsDriver::startSonarDataProcessing()
   sonarViewThread.detach(); 
   cout << "Sonar Driver [startSonarDataProcessing]: Detach View Thread" << endl; 
 
-  // Compute Fire period from given frequency 
-  int fire_period = int(1 / FIRE_FREQUENCY * 1e9); 
-
   // Send Periodic Fire Message request 
   while(sonarConnected and readThreadActive()){
     cout << "Sonar Driver [startSonarDataProcessing]: Sending New Fire request" << endl; 
     fireSonar();
 
     // retrieve data saved on sonar 
-    std::this_thread::sleep_for(chrono::nanoseconds(fire_period));
+    std::this_thread::sleep_for(chrono::nanoseconds(firePeriod));
   }
 
   cout << "Sonar Driver [startSonarDataProcessing]: Stop sonar data retrieval" << endl; 

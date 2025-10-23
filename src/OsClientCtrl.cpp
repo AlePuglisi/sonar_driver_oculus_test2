@@ -380,9 +380,9 @@ void OsReadThread::run()
  // connect(m_pSocket, &QAbstractSocket::error(QAbstractSocket::SocketError), this, &OsReadThread::socketError(QAbstractSocket::SocketError));
   //connect(m_pSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
 
-  bool timeout = true;
+  //bool timeout = true;
 
-  int count = 0;
+  //int count = 0;
 
   while (IsActive())
   {

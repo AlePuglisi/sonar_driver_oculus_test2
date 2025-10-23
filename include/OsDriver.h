@@ -17,15 +17,29 @@ using namespace std;
 // Driver Struct collecting fire parameters  
 struct FireConfig
 {
-    int mode; 
-    PingRateType pingRate;
-    double range; 
-    double gain; 
-    double speedOfSound; 
-    double salinity; 
-    bool gainAssist; 
-    uint8_t gammaCorrection;
-    uint8_t netSpeedLimit;
+    int mode                 = 1; 
+    PingRateType pingRate    = PingRateType::pingRateHighest;
+    double range             = 10.0; 
+    double gain              = 20.0; 
+    double speedOfSound      = 0.0; 
+    double salinity          = 0.0; 
+    bool gainAssist          = false;  
+    uint8_t gammaCorrection  = 0x7f; 
+    uint8_t netSpeedLimit    = 0xff; 
+};
+
+// Driver Struct collecting fire parameters with int ping
+struct FireConfig2
+{
+    int mode                 = 1; 
+    int pingRate             = 5;
+    double range             = 10.0; 
+    double gain              = 20.0; 
+    double speedOfSound      = 0.0; 
+    double salinity          = 0.0; 
+    bool gainAssist          = false;  
+    uint8_t gammaCorrection  = 0x7f; 
+    uint8_t netSpeedLimit    = 0xff; 
 };
 
 
@@ -34,19 +48,24 @@ class OsDriver
 public:
     OsDriver();
     OsDriver(string ip_addr, string init_file_name);
+    OsDriver(string ip_addr, FireConfig2 fire_config);
     ~OsDriver();
 
     // Driver Attributes
 
     string sonarIp;              // Sonar IP for connection
     unsigned char* sonarImage;   // Sonar Image
+    uint32_t sonarImageSize; 
     int sonarImageWidth;         // Sonar Image Width
     int sonarImageHeight;        // Sonar Image Height
     uint8_t* sonarRaw;           // Sonar Raw data
     unsigned int latest_id;      // Keep track of Ping image ID 
     OsClientCtrl sonar;          // Sonar API 
     FireConfig sonarFireConfig;  // Sonar Fire configuration
-    bool sonarConnected; // Flag for TCP connection state 
+    bool sonarConnected;         // Flag for TCP connection state 
+
+    int readPeriod;             // Update sonar period 
+    int firePeriod;              // Fire sonar period 
 
     // Driver Methods 
 
@@ -63,13 +82,21 @@ public:
      */
     bool readThreadActive();      
     /**
-     * @brief Initialize fire configuration after connecting 
+     * @brief Initialize fire configuration from csv file after connecting 
      *
      * @param file_name
      * 
      * @return true if succesful initialization of fire parameters 
      */            
     bool initializeSonar(string file_name);   
+    /**
+     * @brief Initialize fire configuration from given configuration after connecting 
+     *
+     * @param fire_config
+     * 
+     * @return true if succesful initialization of fire parameters 
+     */            
+    bool initializeSonar(FireConfig2 fire_config);   
     /**
      * @brief Dynamic reconfigure sonar fire parameters (at runtime)
      * 
