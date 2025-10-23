@@ -98,9 +98,9 @@ bool OsDriver::connectToSonar()
     cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
 
 
-    while ((trial_number <= 5) and (!sonar.Connect())){
+    while ((trial_number <= RECONNECTION_TENTATIVE) and (!sonar.Connect())){
         trial_number += 1;
-        if (trial_number <= 5)
+        if (trial_number <= RECONNECTION_TENTATIVE)
             cout << "Sonar Driver [connectToSonar]: Tentative " << to_string(trial_number) << " to connect at ip: " << sonar.m_hostname << endl ; 
     }
 

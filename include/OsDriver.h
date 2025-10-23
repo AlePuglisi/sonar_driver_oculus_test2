@@ -12,6 +12,8 @@
 #define UPDATE_FREQUENCY  40     // Frequency of Reading sonar data in Hz
 #define FIRE_FREQUENCY     5     // Frequency of Sending Fire request in Hz
 
+#define RECONNECTION_TENTATIVE 5 // Number of tentatives of TCP reconnection 
+
 using namespace std;
 
 // Driver Struct collecting fire parameters  
