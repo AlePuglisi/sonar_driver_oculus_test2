@@ -5,6 +5,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+add_definitions(-DCONFIG_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/config/\")
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -19,7 +21,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   std_msgs
   cv_bridge
-  sonar_oculus_interface
+  #sonar_oculus_interface
   sensor_msgs
   tf2_ros
   OpenCV)
@@ -32,10 +34,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 install(TARGETS ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
 
-install(PROGRAMS
-  scripts/oculus_viewer.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(PROGRAMS
+#   scripts/oculus_viewer.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
 <package format="3">
-  <name>sonar_oculus</name>
+  <name>sonar_driver_oculus</name>
   <version>1.0.0</version>
-  <description>The sonar_oculus package</description>
+  <description>The sonar_driver_oculus package</description>
   <license>Apache-2.0</license>
   <maintainer email="alessandro.puglisi@lirmm.fr">Puglisi Alessandro</maintainer>
 
@@ -15,7 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>OpenCV</depend>
-  <depend>sonar_oculus_interface</depend>
+  <!-- <depend>sonar_oculus_interface</depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
