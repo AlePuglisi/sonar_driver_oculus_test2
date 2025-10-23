@@ -38,11 +38,13 @@ SonarDriverOculusNode::SonarDriverOculusNode()
     sonar_fire_config.gammaCorrection = gammaCorrection; 
     sonar_fire_config.netSpeedLimit = netSpeedLimit; 
 
+    sonar_driver->readPeriod = int(1/pingRate *1e9); 
+
     // delayed construction of the object 
     RCLCPP_INFO(this->get_logger(), "Creating Sonar Oculus Driver instance...");
     sonar_driver.emplace(IP_ADDR, sonar_fire_config); 
 
-    // Setup timer loop (50 Hz here)
+    // Setup timer loop 
     if(sonar_driver->sonarConnected) {
         RCLCPP_INFO(this->get_logger(), "Sonar Oculus node initialized.");
 
@@ -92,6 +94,15 @@ SonarDriverOculusNode::reconfigureSonarCallback(const std::vector<rclcpp::Parame
         } else if (param.get_name() == "netSpeedLimit") {
             netSpeedLimit = param.as_int();
         }
+    }
+
+    // Update Sonar refresh rate at runtime based on the ping rate request 
+    if(pingRate != sonar_fire_config.pingRate){
+        sonar_driver->readPeriod = int(1/pingRate * 1e9);
+        sonar_update_timer_->cancel();
+        sonar_update_timer_ = this->create_wall_timer(
+            std::chrono::nanoseconds(sonar_driver->readPeriod), 
+            std::bind(&SonarDriverOculusNode::loopSonarCallback, this)); 
     }
 
     sonar_fire_config.mode = mode; 

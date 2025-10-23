@@ -9,7 +9,7 @@
 #define RANGE_MAX_HF 5           // Maximum High Frequency range for M3000d Oculus
 #define RANGE_MAX_LF 30          // Maximum Low  Frequency range for M3000d Oculus
 
-#define UPDATE_FREQUENCY 100     // Frequency of Reading sonar data in Hz
+#define UPDATE_FREQUENCY  40     // Frequency of Reading sonar data in Hz
 #define FIRE_FREQUENCY     5     // Frequency of Sending Fire request in Hz
 
 using namespace std;
